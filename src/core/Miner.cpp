@@ -548,6 +548,21 @@ void xmrig::Miner::setEnabled(bool enabled)
     Nonce::touch();
 }
 
+static bool qubicVerifyNonceDomain(const xmrig::Job& job)
+{
+    uint16_t compId = job.computorIndex();
+    uint16_t firstCompId = job.firstComputorIndex();
+    uint16_t lastCompId = job.lastComputorIndex();
+    uint32_t startNonce = job.startNonce();
+    uint32_t endNonce = job.endNonce();
+    if (compId < firstCompId || compId > lastCompId) return false;
+    uint32_t domainSize = (uint32_t)((1ULL << 32) / ((uint64_t)lastCompId - firstCompId + 1));
+    unsigned int validStartNonce = (compId - firstCompId) * domainSize;
+    unsigned int validEndNonce = validStartNonce + domainSize;
+    if ((startNonce < validStartNonce) || (startNonce > validEndNonce) ) return false;
+    if ((endNonce < validStartNonce) || (endNonce > validEndNonce) ) return false;
+    return true;
+}
 
 void xmrig::Miner::setJob(const Job &job, bool donate)
 {
@@ -580,8 +595,41 @@ void xmrig::Miner::setJob(const Job &job, bool donate)
         d_ptr->reset = false;
     }
 
+    // qubic extension: reset if index changes or the nonce range
+    if(
+            (d_ptr->job.computorIndex() != job.computorIndex()) ||
+            (d_ptr->job.startNonce() != job.startNonce()) ||
+            (d_ptr->job.endNonce() != job.endNonce()) ||
+                    (d_ptr->job.firstComputorIndex() != job.firstComputorIndex()) ||
+                    (d_ptr->job.lastComputorIndex() != job.lastComputorIndex())
+    ){
+        d_ptr->reset = true;
+    }
+
+    Nonce::setComputorIndex(job.computorIndex());
+    Nonce::setFirstComputorIndex(job.firstComputorIndex());
+    Nonce::setLastComputorIndex(job.lastComputorIndex());
+    Nonce::setTargetStartNonce(job.startNonce());
+    Nonce::setTargetEndNonce(job.endNonce());
+
+    LOG_INFO("%s computor index set to %i", Tags::miner(), job.computorIndex());
+    LOG_INFO("%s first comp index set to %u", Tags::miner(), job.firstComputorIndex());
+    LOG_INFO("%s last comp index set to %u", Tags::miner(), job.lastComputorIndex());
+    LOG_INFO("%s start nonce set to %u", Tags::miner(), job.startNonce());
+    LOG_INFO("%s end nonce set to %u", Tags::miner(), job.endNonce());
+    if (!qubicVerifyNonceDomain(job))
+    {
+        LOG_WARN("%s " YELLOW("Incorrect nonce range, you may mine for somebody else"), Tags::miner());
+    }
+    else
+    {
+        LOG_INFO("%s " GREEN("Valid nonce range"), Tags::miner());
+    }
+
+
     d_ptr->job   = job;
     d_ptr->job.setIndex(index);
+
 
     if (index == 0) {
         d_ptr->userJobId = job.id();

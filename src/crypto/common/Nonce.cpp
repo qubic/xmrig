@@ -30,6 +30,14 @@ std::atomic<uint64_t> Nonce::m_nonces[2] = { {0}, {0} };
 } // namespace xmrig
 
 
+// qubic extension
+uint16_t xmrig::Nonce::m_targetComputorIndex = 676;
+uint16_t xmrig::Nonce::m_targetFirstComputorIndex = 0;
+uint16_t xmrig::Nonce::m_targetLastComputorIndex = 0;
+
+uint32_t xmrig::Nonce::m_targetStartNonce = 0;
+uint32_t xmrig::Nonce::m_targetEndNonce = UINT32_MAX;
+
 bool xmrig::Nonce::next(uint8_t index, uint32_t *nonce, uint32_t reserveCount, uint64_t mask)
 {
     mask &= 0x7FFFFFFFFFFFFFFFULL;
@@ -37,7 +45,11 @@ bool xmrig::Nonce::next(uint8_t index, uint32_t *nonce, uint32_t reserveCount, u
         return false;
     }
 
-    uint64_t counter = m_nonces[index].fetch_add(reserveCount, std::memory_order_relaxed);
+    uint64_t counter = m_targetStartNonce + m_nonces[index].fetch_add(reserveCount, std::memory_order_relaxed);
+    if (counter + reserveCount >= uint64_t(m_targetEndNonce))
+    {
+        return false;
+    }
     while (true) {
         if (mask < counter) {
             return false;

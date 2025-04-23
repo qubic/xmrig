@@ -258,7 +258,6 @@ void xmrig::CpuWorker<N>::start()
         bool first = true;
         alignas(16) uint64_t tempHash[8] = {};
 #       endif
-
         while (!Nonce::isOutdated(Nonce::CPU, m_job.sequence())) {
             const Job &job = m_job.currentJob();
 
@@ -298,11 +297,9 @@ void xmrig::CpuWorker<N>::start()
                     }
                     randomx_calculate_hash_first(m_vm, tempHash, m_job.blob(), job.size());
                 }
-
                 if (!nextRound()) {
                     break;
                 }
-
                 if (job.hasMinerSignature()) {
                     memcpy(miner_signature_saved, miner_signature_ptr, sizeof(miner_signature_saved));
                     job.generateMinerSignature(m_job.blob(), job.size(), miner_signature_ptr);

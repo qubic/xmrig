@@ -49,6 +49,40 @@ public:
     static void stop();
     static void touch();
 
+    // Add these as class members
+    static uint16_t m_targetComputorIndex;
+    static uint16_t m_targetFirstComputorIndex;
+    static uint16_t m_targetLastComputorIndex;
+    static uint32_t m_targetStartNonce;
+    static uint32_t m_targetEndNonce;
+    static const uint16_t m_numberOfComputors = 676;
+    
+    // Add a method to set these values
+    static inline uint16_t computorIndex() { return m_targetComputorIndex; }
+    static void setComputorIndex(uint16_t computorIndex) {
+        m_targetComputorIndex = computorIndex;
+    }
+
+    static inline uint16_t firstComputorIndex() { return m_targetFirstComputorIndex; }
+    static void setFirstComputorIndex(uint16_t computorIndex) {
+        m_targetFirstComputorIndex = computorIndex;
+    }
+
+    static inline uint16_t lastComputorIndex() { return m_targetLastComputorIndex; }
+    static void setLastComputorIndex(uint16_t computorIndex) {
+        m_targetLastComputorIndex = computorIndex;
+    }
+
+    static inline uint32_t startNonce() { return m_targetStartNonce; }
+    static void setTargetStartNonce(uint32_t startNonce) {
+        m_targetStartNonce = startNonce;
+    }
+
+    static inline uint32_t endNonce() { return m_targetEndNonce; }
+    static void setTargetEndNonce(uint32_t endNonce) {
+        m_targetEndNonce = endNonce;
+    }
+
 private:
     static std::atomic<bool> m_paused;
     static std::atomic<uint64_t> m_sequence[MAX];
