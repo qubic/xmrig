@@ -1,4 +1,46 @@
-# XMRig
+# Qubic XMRig mod
+This is a modified XMRig version as a reference implementation to be used with the Qubic Monero POC.
+
+Use the source to build it for your target system. The below referenced binaries point to the **non** modified version. Do not use them.
+
+To make use of the customized features, your stratum server needs also to be customized.
+The Job JSON which is delegated from the Stratum server must contain additional fields.
+
+1. `computorIndex` => the index you want to produce solutions for
+2. `start_nonce` => `uint64`; start to scan for
+3. `end_nonce` => `uint64`; end to scan to
+
+The `start` and `end` is needed that not all of your miners start to scan the same space. You may generate those spaces randomly or specific for your miners. For a 7950X you may  use a size around `155480000`;
+
+
+Example of a complete JSON returned by the customized Stratum server:
+```json
+{
+    ...
+    {
+        "id": "1745433817138",
+        "job": {
+            "blob": "1010D2E9A4C006F0B455B2DFABF2A42C8A4F4A194FC8579F2403EC355E58A90B8CDB2B4E5E5D41000000006D641DF083E9055A502ED446D80FE41D371233E659328AF01420D8D3334A9E5019",
+            "computorIndex": 675,
+            "end_nonce": 2434634175,
+            "height": 3396494,
+            "job_id": "1745433817138",
+            "seed_hash": "8977D87B02B4033F577AD402A0CC41120784818322B19E9E6D4D537A3CAE29D7",
+            "start_nonce": 2279154176,
+            "target": "780D7F02F3220000"
+        }
+    },
+    "status": "OK"
+}
+```
+> the `job_id` may be the `taskIndex` from Qubic for easy identification. [Link to complete Qubic task Struct](https://github.com/qubic/outsourced-computing/blob/main/monero-poc/README.md#the-principle)
+
+> the `-user` param may be the Qubic Address or a pool specific identifier
+
+> the current implementation is fine tuned to run on 32-threads (7950X) if you have more than this, you should run multiple instances
+
+
+# Original XMRig Readme
 
 [![Github All Releases](https://img.shields.io/github/downloads/xmrig/xmrig/total.svg)](https://github.com/xmrig/xmrig/releases)
 [![GitHub release](https://img.shields.io/github/release/xmrig/xmrig/all.svg)](https://github.com/xmrig/xmrig/releases)

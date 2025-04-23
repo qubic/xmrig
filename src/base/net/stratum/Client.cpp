@@ -29,6 +29,7 @@
 #ifdef XMRIG_FEATURE_TLS
 #   include <openssl/ssl.h>
 #   include <openssl/err.h>
+#include <iostream>
 #   include "base/net/stratum/Tls.h"
 #endif
 
@@ -421,6 +422,11 @@ bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
 
     m_job.setClientId(m_rpcId);
 
+    // qubic extension: store current computor index to work for
+    job.setComputorIndex(Json::getUint64(params, "computorIndex"));
+    job.setStartNonce(Json::getUint64(params, "start_nonce"));
+    job.setEndNonce(Json::getUint64(params, "end_nonce"));
+
     if (m_job != job) {
         m_jobs++;
         m_job = std::move(job);
@@ -434,6 +440,8 @@ bool xmrig::Client::parseJob(const rapidjson::Value &params, int *code)
     if (!isQuiet()) {
         LOG_WARN("%s " YELLOW("duplicate job received, reconnect"), tag());
     }
+
+    
 
     close();
     return false;
@@ -742,7 +750,6 @@ void xmrig::Client::parse(char *line, size_t len)
 
         return;
     }
-
     parseNotification(method, Json::getValue(doc, "params"), error);
 }
 

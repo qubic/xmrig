@@ -244,6 +244,11 @@ void xmrig::Job::copy(const Job &other)
     m_extraNonce = other.m_extraNonce;
     m_poolWallet = other.m_poolWallet;
 
+    // qubic extension
+    m_computorIndex = other.m_computorIndex;
+    m_startNonce    = other.m_startNonce;
+    m_endNonce      = other.m_endNonce;
+
     memcpy(m_blob, other.m_blob, sizeof(m_blob));
 
 #   ifdef XMRIG_PROXY_PROJECT
@@ -294,6 +299,11 @@ void xmrig::Job::move(Job &&other)
     m_seed       = std::move(other.m_seed);
     m_extraNonce = std::move(other.m_extraNonce);
     m_poolWallet = std::move(other.m_poolWallet);
+
+    // qubic extension
+    m_computorIndex = other.m_computorIndex;
+    m_startNonce    = other.m_startNonce;
+    m_endNonce      = other.m_endNonce;
 
     memcpy(m_blob, other.m_blob, sizeof(m_blob));
 

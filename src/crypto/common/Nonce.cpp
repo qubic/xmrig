@@ -30,14 +30,23 @@ std::atomic<uint64_t> Nonce::m_nonces[2] = { {0}, {0} };
 } // namespace xmrig
 
 
+// qubic extension
+uint16_t xmrig::Nonce::m_targetComputorIndex = 676;
+uint32_t xmrig::Nonce::m_targetStartNonce = 0;
+uint32_t xmrig::Nonce::m_targetEndNonce = UINT32_MAX;
+
 bool xmrig::Nonce::next(uint8_t index, uint32_t *nonce, uint32_t reserveCount, uint64_t mask)
 {
     mask &= 0x7FFFFFFFFFFFFFFFULL;
     if (reserveCount == 0 || mask < reserveCount - 1) {
         return false;
     }
-
-    uint64_t counter = m_nonces[index].fetch_add(reserveCount, std::memory_order_relaxed);
+    reserveCount *= m_numberOfComputors; // nonce goes with stride 676, need bigger reserve
+    uint64_t counter = m_targetStartNonce + m_nonces[index].fetch_add(reserveCount, std::memory_order_relaxed);
+    if (counter + reserveCount >= uint64_t(m_targetEndNonce))
+    {
+        return false;
+    }
     while (true) {
         if (mask < counter) {
             return false;
@@ -52,6 +61,19 @@ bool xmrig::Nonce::next(uint8_t index, uint32_t *nonce, uint32_t reserveCount, u
         else if (0xFFFFFFFFUL - (uint32_t)counter < reserveCount - 1) {
             counter = m_nonces[index].fetch_add(reserveCount, std::memory_order_relaxed);
             continue;
+        }
+        // Adjust counter to ensure nonce % 676 = computorIndex
+        if (counter % m_numberOfComputors != m_targetComputorIndex) {
+            uint64_t offset = (m_numberOfComputors - (counter % m_numberOfComputors) + m_targetComputorIndex) % m_numberOfComputors;
+            if (offset == 0) {
+                offset = m_numberOfComputors;
+            }
+            counter += offset;
+
+            // Check if the adjusted counter is still valid
+            if (mask < counter) {
+                return false;
+            }
         }
 
         writeUnaligned(nonce, static_cast<uint32_t>((readUnaligned(nonce) & ~mask) | counter));

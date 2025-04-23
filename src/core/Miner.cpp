@@ -580,8 +580,23 @@ void xmrig::Miner::setJob(const Job &job, bool donate)
         d_ptr->reset = false;
     }
 
+    // qubic extension: reset if index changes or the nonce range
+    if((d_ptr->job.computorIndex() != job.computorIndex()) || (d_ptr->job.startNonce() != job.startNonce()) || (d_ptr->job.endNonce() != job.endNonce()) ){
+        d_ptr->reset = true;
+    }
+
+    Nonce::setComputorIndex(job.computorIndex());
+    Nonce::setTargetStartNonce(job.startNonce());
+    Nonce::setTargetEndNonce(job.endNonce());
+
+    LOG_INFO("%s computor index set to %i", Tags::miner(), job.computorIndex());
+    LOG_INFO("%s start nonce set to %u", Tags::miner(), job.startNonce());
+    LOG_INFO("%s end nonce set to %u", Tags::miner(), job.endNonce());
+
+
     d_ptr->job   = job;
     d_ptr->job.setIndex(index);
+
 
     if (index == 0) {
         d_ptr->userJobId = job.id();

@@ -143,6 +143,16 @@ public:
 
     uint32_t getNumTransactions() const;
 
+    // qubic extension
+    inline uint16_t computorIndex() const    { return m_computorIndex; }
+    inline void setComputorIndex(uint16_t r) { m_computorIndex = r % 676; }
+
+    inline uint32_t startNonce() const    { return m_startNonce; }
+    inline void setStartNonce(uint32_t r) { m_startNonce = r; }
+
+    inline uint32_t endNonce() const    { return m_endNonce; }
+    inline void setEndNonce(uint32_t r) { m_endNonce = r; }
+
 private:
     void copy(const Job &other);
     void move(Job &&other);
@@ -161,6 +171,11 @@ private:
     uint64_t m_target   = 0;
     uint8_t m_blob[kMaxBlobSize]{ 0 };
     uint8_t m_index     = 0;
+
+    // qubic extension
+    uint16_t m_computorIndex = 0; // target computor index for nonce space
+    uint32_t m_startNonce = 0;
+    uint32_t m_endNonce = UINT32_MAX;
 
 #   ifdef XMRIG_PROXY_PROJECT
     char m_rawBlob[kMaxBlobSize * 2 + 8]{};

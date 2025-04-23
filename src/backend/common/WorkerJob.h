@@ -133,7 +133,7 @@ inline bool xmrig::WorkerJob<1>::nextRound(uint32_t rounds, uint32_t roundSize)
     uint32_t* n = nonce();
 
     if ((m_rounds[index()] & (rounds - 1)) == 0) {
-        if (!Nonce::next(index(), n, rounds * roundSize, nonceMask())) {
+        if (!Nonce::next(index(), n, roundSize, nonceMask())) {
             return false;
         }
         if (nonceSize() == sizeof(uint64_t)) {

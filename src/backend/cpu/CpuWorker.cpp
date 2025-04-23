@@ -52,7 +52,7 @@
 
 namespace xmrig {
 
-static constexpr uint32_t kReserveCount = 32768;
+static constexpr uint32_t kReserveCount = 6144;
 
 
 #ifdef XMRIG_ALGO_CN_HEAVY
@@ -240,6 +240,7 @@ void xmrig::CpuWorker<N>::hashrateData(uint64_t &hashCount, uint64_t &, uint64_t
 template<size_t N>
 void xmrig::CpuWorker<N>::start()
 {
+//    bool dump = false;
     while (Nonce::sequence(Nonce::CPU) > 0) {
         if (Nonce::isPaused()) {
             do {
@@ -258,7 +259,7 @@ void xmrig::CpuWorker<N>::start()
         bool first = true;
         alignas(16) uint64_t tempHash[8] = {};
 #       endif
-
+//    std::map<uint32_t, bool> mp;
         while (!Nonce::isOutdated(Nonce::CPU, m_job.sequence())) {
             const Job &job = m_job.currentJob();
 
@@ -269,6 +270,19 @@ void xmrig::CpuWorker<N>::start()
             uint32_t current_job_nonces[N];
             for (size_t i = 0; i < N; ++i) {
                 current_job_nonces[i] = readUnaligned(m_job.nonce(i));
+//                if (mp.find(current_job_nonces[i]) == mp.end())
+//                {
+//                    mp[current_job_nonces[i]] = true;
+//                }
+//                else
+//                {
+//                    printf("Duplicated %u\n", current_job_nonces[i]);
+//                }
+//                if (!dump)
+//                {
+//                    printf("Nonce is %u - %u => %u\n", current_job_nonces[i], Nonce::m_targetEndNonce, Nonce::m_targetEndNonce - current_job_nonces[i]);
+//                    dump = true;
+//                }
             }
 
 #           ifdef XMRIG_FEATURE_BENCHMARK
@@ -298,11 +312,9 @@ void xmrig::CpuWorker<N>::start()
                     }
                     randomx_calculate_hash_first(m_vm, tempHash, m_job.blob(), job.size());
                 }
-
                 if (!nextRound()) {
                     break;
                 }
-
                 if (job.hasMinerSignature()) {
                     memcpy(miner_signature_saved, miner_signature_ptr, sizeof(miner_signature_saved));
                     job.generateMinerSignature(m_job.blob(), job.size(), miner_signature_ptr);
@@ -375,7 +387,7 @@ bool xmrig::CpuWorker<N>::nextRound()
     constexpr uint32_t count = kReserveCount;
 #   endif
 
-    if (!m_job.nextRound(count, 1)) {
+    if (!m_job.nextRound(count, Nonce::m_numberOfComputors)) {
         JobResults::done(m_job.currentJob());
 
         return false;
