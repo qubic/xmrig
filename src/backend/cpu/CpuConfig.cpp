@@ -169,6 +169,11 @@ void xmrig::CpuConfig::generate()
         return;
     }
 
+    // Use all threads by default
+    if (m_limit < 100) {
+        m_limit = Cpu::info()->threads();
+    }
+
     size_t count = 0;
 
     count += xmrig::generate<Algorithm::CN>(m_threads, m_limit);
