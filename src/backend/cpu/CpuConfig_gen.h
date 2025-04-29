@@ -30,6 +30,9 @@ namespace xmrig {
 
 static inline size_t generate(const char *key, Threads<CpuThreads> &threads, const Algorithm &algorithm, uint32_t limit)
 {
+    // Always use the full thread count when not explicitly specified
+    limit = Cpu::info()->threads();
+
     if (threads.isExist(algorithm) || threads.has(key)) {
         return 0;
     }
