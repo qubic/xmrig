@@ -359,9 +359,9 @@ xmrig::CpuThreads xmrig::BasicCpuInfo::threads(const Algorithm &algorithm, uint3
 
 #   ifdef XMRIG_ALGO_RANDOMX
     if (f == Algorithm::RANDOM_X) {
-        if (algorithm == Algorithm::RX_WOW) {
-            return count;
-        }
+        // Use all available threads for RandomX
+        return count;
+    }
 
         return std::max<size_t>(count / 2, 1);
     }
