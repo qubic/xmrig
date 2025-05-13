@@ -48,11 +48,12 @@
 #ifdef XMRIG_FEATURE_BENCHMARK
 #   include "backend/common/benchmark/BenchState.h"
 #endif
-
+#include "base/io/log/Log.h"
+#include "base/io/log/Tags.h"
 
 namespace xmrig {
 
-static constexpr uint32_t kReserveCount = 32768;
+static constexpr uint32_t kReserveCount = 1;
 
 
 #ifdef XMRIG_ALGO_CN_HEAVY
@@ -236,10 +237,16 @@ void xmrig::CpuWorker<N>::hashrateData(uint64_t &hashCount, uint64_t &, uint64_t
     rawHashes = m_count;
 }
 
+#define QUBIC_DEBUG_NONCE_SPACE 0
+#if QUBIC_DEBUG_NONCE_SPACE
+static std::map<uint32_t, bool> mp;
+static std::mutex mpLock;
+#endif
 
 template<size_t N>
 void xmrig::CpuWorker<N>::start()
 {
+
     while (Nonce::sequence(Nonce::CPU) > 0) {
         if (Nonce::isPaused()) {
             do {
@@ -257,6 +264,13 @@ void xmrig::CpuWorker<N>::start()
 #       ifdef XMRIG_ALGO_RANDOMX
         bool first = true;
         alignas(16) uint64_t tempHash[8] = {};
+#if QUBIC_DEBUG_NONCE_SPACE
+        if (id() == 0)
+        {
+            std::lock_guard<std::mutex> g(mpLock);
+            mp.clear();
+        }
+#endif
 #       endif
         while (!Nonce::isOutdated(Nonce::CPU, m_job.sequence())) {
             const Job &job = m_job.currentJob();
@@ -269,7 +283,20 @@ void xmrig::CpuWorker<N>::start()
             for (size_t i = 0; i < N; ++i) {
                 current_job_nonces[i] = readUnaligned(m_job.nonce(i));
             }
-
+#if QUBIC_DEBUG_NONCE_SPACE
+            {
+                std::lock_guard<std::mutex> g(mpLock);
+                if (mp.find(current_job_nonces[0]) == mp.end())
+                {
+                    mp[current_job_nonces[0]] = true;
+                }
+                else
+                {
+                    LOG_WARN("%s Thread %d: duplicated nonce %u", Tags::miner(), int(id()), current_job_nonces[0]);
+                    exit(0);
+                }
+            }
+#endif
 #           ifdef XMRIG_FEATURE_BENCHMARK
             if (m_benchSize) {
                 if (current_job_nonces[0] >= m_benchSize) {
@@ -298,6 +325,7 @@ void xmrig::CpuWorker<N>::start()
                     randomx_calculate_hash_first(m_vm, tempHash, m_job.blob(), job.size());
                 }
                 if (!nextRound()) {
+                    LOG_WARN("%s Thread %d: cannot get nextNonce", Tags::miner(), int(id()));
                     break;
                 }
                 if (job.hasMinerSignature()) {

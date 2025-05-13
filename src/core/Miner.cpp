@@ -613,17 +613,17 @@ void xmrig::Miner::setJob(const Job &job, bool donate)
     Nonce::setTargetEndNonce(job.endNonce());
 
     LOG_INFO("%s computor index set to %i", Tags::miner(), job.computorIndex());
-    LOG_INFO("%s first comp index set to %u", Tags::miner(), job.firstComputorIndex());
-    LOG_INFO("%s last comp index set to %u", Tags::miner(), job.lastComputorIndex());
-    LOG_INFO("%s start nonce set to %u", Tags::miner(), job.startNonce());
-    LOG_INFO("%s end nonce set to %u", Tags::miner(), job.endNonce());
+    LOG_DEBUG("%s first comp index set to %u", Tags::miner(), job.firstComputorIndex());
+    LOG_DEBUG("%s last comp index set to %u", Tags::miner(), job.lastComputorIndex());
+    LOG_DEBUG("%s start nonce set to %u", Tags::miner(), job.startNonce());
+    LOG_DEBUG("%s end nonce set to %u", Tags::miner(), job.endNonce());
     if (!qubicVerifyNonceDomain(job))
     {
         LOG_WARN("%s " YELLOW("Incorrect nonce range, you may mine for somebody else"), Tags::miner());
     }
     else
     {
-        LOG_INFO("%s " GREEN("Valid nonce range"), Tags::miner());
+        LOG_DEBUG("%s " GREEN("Valid nonce range"), Tags::miner());
     }
 
 
