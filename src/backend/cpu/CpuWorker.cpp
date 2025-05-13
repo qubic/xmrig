@@ -325,7 +325,7 @@ void xmrig::CpuWorker<N>::start()
                     randomx_calculate_hash_first(m_vm, tempHash, m_job.blob(), job.size());
                 }
                 if (!nextRound()) {
-                    LOG_WARN("%s Thread %d: cannot get nextNonce", Tags::miner(), int(id()));
+                    LOG_DEBUG("%s Thread %d: cannot get nextNonce", Tags::miner(), int(id()));
                     break;
                 }
                 if (job.hasMinerSignature()) {
